@@ -12,14 +12,10 @@ import pylab as pl
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc
-from sklearn.datasets import load_iris
-from sklearn.ensemble import RandomForestClassifier
 
 #read the data in
-df = pd.read_csv('/home/meschke/Desktop/TesterKaggle/AggMoreDataTrain_zeroOne.csv', 
-                 header = None, low_memory=False)
-df1 = pd.read_csv('/home/meschke/Desktop/TesterKaggle/AggMoreDataTest.csv', 
-                 header = None, low_memory=False)
+df = pd.read_csv('/home/meschke/Desktop/TesterKaggle/fullJoinAgg_zeroOne.csv', header = None)
+df1 = pd.read_csv('/home/meschke/Desktop/TesterKaggle/fullJoinAgg_test.csv', header = None)
 
 #Get some summary statistics
 #print df.head()
@@ -30,44 +26,34 @@ df1 = pd.read_csv('/home/meschke/Desktop/TesterKaggle/AggMoreDataTest.csv',
 #pl.show()
 #print df.columns
 
-
 #Choose the columns to keep
-cols_to_keep_train = [1,2,3,4,5,13]
-cols_to_keep_test = [1,2,3,4,5,11]
-#cols_to_keep = [5]
-inputVals = df[cols_to_keep_train]
-#inputVals[5] = 1.0
-testVals = df1[cols_to_keep_test]
-#testVals[5] = 1.0
-
-testVals[[11]] = testVals[[11]].astype(np.float64)
+cols_to_keep = [1,2,3,4]
+#cols_to_keep = [4]
+inputVals = df[cols_to_keep]
+inputVals[5] = 1.0
+testVals = df1[cols_to_keep]
+testVals[5] = 1.0
 
 #This works well, in 265 place with the power as .5
 #.25 is doesn't work as well as .5.
 #This normalizes the values.
-#inputValsNorm = np.power(inputVals,.5)
-#testValsNorm = np.power(testVals, .5)
+inputValsNorm = np.power(inputVals,.5)
+testValsNorm = np.power(testVals, .5)
 
-#This normalizes the values.
-inputValsNorm = np.log(inputVals + 1)
-testValsNorm = np.log(testVals + 1)
-
-
+#inputValsNorm.describe()
 
 #Plot a histogram of the values
 #inputValsNorm.hist(xlabelsize = .2)
 #plt.show()
 
 #Set the model and fit it.
-model = linear_model.LogisticRegression(C=1e5, penalty = 'l1')
-model.fit(inputValsNorm, df[8])
+model = linear_model.LogisticRegression(C=1e5)
+model.fit(inputVals, df[6])
 
 #Print coefficents
 print model.coef_
 
 #Output gives us our values for the original train set.  
-#.60815 non-normalized
-#.614630 nomrmalized.
 output = model.predict_proba(inputValsNorm)
 output1 = model.predict_proba(testValsNorm)
 
@@ -80,7 +66,7 @@ print min(output1[:,1])
 print sum(output1[:,1])/len(output1[:,1])
 
 # Compute ROC curve and area the curve
-fpr, tpr, thresholds = roc_curve(df[8], output[:,1])
+fpr, tpr, thresholds = roc_curve(df[6], output[:,1])
 roc_auc = auc(fpr, tpr)
 print "Area under the ROC curve : %f" % roc_auc
 
@@ -100,10 +86,8 @@ pl.show()
 #Write to the output file.
 outputTuple = zip(df1[0], output1[:,1])
 
-with open('/home/meschke/Desktop/TesterKaggle/logSubmissionNormalLogL1.csv', 'w') as f:
+with open('/home/meschke/Desktop/TesterKaggle/logSubmission.csv', 'w') as f:
     f.write("id,repeatProbability\n")    
     for tup in outputTuple:
         if(tup[0] != 'id'):
             f.write(str(tup[0]) + "," + str(tup[1]) + "\n")
-            
-            

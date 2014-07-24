@@ -1,0 +1,45 @@
+Initial configuration of each file:
+transactions.csv--
+id,chain,dept,category,company,brand,date,productsize,productmeasure,purchasequantity,purchaseamount
+offers.csv--
+offer,category,quantity,company,offervalue,brand
+testHistory.csv--id,chain,offer,market,offerdate
+trainHistory.csv--id,chain,offer,market,repeattrips,repeater,offerdate
+
+trainHistory.csv join offers.csv output to offerHistory--
+offer,id,chain,market,repeattrips,repeater,offerdate,category,quantity,company,offervalue,brand
+
+filtered transactions.csv
+id,chain,dept,category,company,brand,date,productsize,productmeasure,purchasequantity,purchaseamount
+
+
+Assume that the PWD is the directory with they python scripts.  InputData is the input data to the model, from Kaggle.  Output data is the output of the different map/reduce processes.  
+
+First, join the TrainHistory and the Offers.
+
+$python joinOffersHistory.py --output-dir outputData/ --no-output inputData/trainHistory.csv inputData/offers.csv 
+
+$python joinOffersHistory.py --output-dir outputData/offerHistory --no-output inputData/trainHistory.csv inputData/offers.csv 
+
+Join the transactions file directly with the offerHistory
+
+$python filteredTransactionsjoinOfferHistory.py inputData/transactions1.csv outputData/part-00000
+
+
+
+
+Next, filter the transactions by offer if the transaction includes the company/product/brand.  This is 11 columns wide.
+
+$python transactionsFilter.py --output-dir outputData/ --no-output inputData/sampleTransactions.csv
+
+Join the trainANDoffers with the filteredTransactions.
+
+**For full join test on AWS
+$python fullJoin.py -r emr --output-dir S3://emeschkekaggletest/data/fulljoin --no-output S3://emeschkekaggletest/data/transactions1.csv S3://emeschkekaggletest/data/trainHistory.csv 
+
+
+
+**For parsing on AWS
+python finalParse.py -r emr --output-dir s3://emeschkekaggletest/filterTrain s3://emeschkekaggletest/data/filteredData/fullJoinTrain.csv
+
+
